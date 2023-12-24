@@ -4,11 +4,13 @@ class HomeHeader extends StatefulWidget {
   final int calorie;
   final double hourSpent;
   final int daysWorkout;
+  final Function()? onPressed;
   const HomeHeader(
       {super.key,
       required this.calorie,
       required this.hourSpent,
-      required this.daysWorkout});
+      required this.daysWorkout,
+      required this.onPressed});
 
   @override
   State<HomeHeader> createState() => _HomeHeaderState();
@@ -30,6 +32,10 @@ class _HomeHeaderState extends State<HomeHeader> {
         children: [
           Column(
             children: [
+              // TextButton(
+              //   onPressed: widget.onPressed,
+              //   child: const Text("Clear Tables"),
+              // ),
               Text(
                 "${widget.calorie}",
                 style: const TextStyle(

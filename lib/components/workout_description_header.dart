@@ -4,11 +4,16 @@ class WorkoutDescriptionHeader extends StatefulWidget {
   final int calorie;
   final double hourSpent;
   final int daysWorkout;
-  const WorkoutDescriptionHeader(
-      {super.key,
-      required this.calorie,
-      required this.hourSpent,
-      required this.daysWorkout});
+  final String workoutName;
+  final String workoutDescription;
+  const WorkoutDescriptionHeader({
+    super.key,
+    required this.calorie,
+    required this.hourSpent,
+    required this.daysWorkout,
+    required this.workoutName,
+    required this.workoutDescription,
+  });
 
   @override
   State<WorkoutDescriptionHeader> createState() =>
@@ -27,61 +32,96 @@ class _WorkoutDescriptionHeaderState extends State<WorkoutDescriptionHeader> {
         10,
       ),
       width: double.infinity,
-      child: Row(
+      child: Column(
         children: [
-          Column(
+          Center(
+            child: Text(
+              widget.workoutName,
+              style: const TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          const Divider(
+            thickness: 1,
+            color: Colors.black,
+          ),
+          Row(
             children: [
-              Text(
-                "${widget.calorie}",
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
+              Column(
+                children: [
+                  Text(
+                    "${widget.calorie}",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const Text(
+                    "Calorie",
+                    style: TextStyle(fontSize: 10),
+                  ),
+                ],
               ),
-              const SizedBox(
-                height: 10,
+              const Spacer(),
+              Column(
+                children: [
+                  Text(
+                    "${widget.hourSpent}",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const Text(
+                    "Hours",
+                    style: TextStyle(fontSize: 10),
+                  ),
+                ],
               ),
-              const Text(
-                "Calorie",
-                style: TextStyle(fontSize: 10),
+              const Spacer(),
+              Column(
+                children: [
+                  Text(
+                    "${widget.daysWorkout}",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const Text(
+                    "Last 7 days",
+                    style: TextStyle(fontSize: 10),
+                  ),
+                ],
               ),
             ],
           ),
-          const Spacer(),
-          Column(
-            children: [
-              Text(
-                "${widget.hourSpent}",
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              const Text(
-                "Hours",
-                style: TextStyle(fontSize: 10),
-              ),
-            ],
+          const Divider(
+            thickness: 1,
+            color: Colors.black,
           ),
-          const Spacer(),
-          Column(
+          Row(
             children: [
-              Text(
-                "${widget.daysWorkout}",
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 5.0,
                 ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              const Text(
-                "Last 7 days",
-                style: TextStyle(fontSize: 10),
+                child:
+                    Text("Workout Description: ${widget.workoutDescription}"),
               ),
             ],
           ),
