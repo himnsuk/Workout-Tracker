@@ -10,6 +10,7 @@ class WorkoutTrackerDB {
       "workout_id" INTEGER PRIMARY KEY AUTOINCREMENT,
       "workout_name" TEXT NOT NULL,
       "workout_description" TEXT NOT NULL,
+      "status" TEXT NOT NULL,
       "total_weight_lifted" REAL NOT NULL,
       "updated_at" INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
       "created_at" INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int))
@@ -21,6 +22,8 @@ class WorkoutTrackerDB {
       "exercise_name" TEXT NOT NULL,
       "exercise_description" TEXT NOT NULL,
       "body_part" TEXT NOT NULL,
+      "status" TEXT NOT NULL,
+      "set_number" INTEGER NOT NULL,
       "weight_used" REAL NOT NULL,
       "repetition" INTEGER NOT NULL,
       "updated_at" INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
@@ -32,45 +35,44 @@ class WorkoutTrackerDB {
   Future<int?> createWorkout(
       {required String workoutName,
       required String workoutDescription,
+      required String status,
       required double totalWeightLifted,
       required DateTime updatedAt,
       required DateTime createdAt}) async {
     final database = await DatabaseService().database;
     return await database?.rawInsert(
-        """INSERT INTO $workoutTable (workout_name, workout_description, total_weight_lifted, updated_at, created_at) VALUES (?, ?, ?, ?, ?)""",
+        """INSERT INTO $workoutTable (workout_name, workout_description, status, total_weight_lifted, updated_at, created_at) VALUES (?, ?, ?, ?, ?, ?)""",
         [
           workoutName,
           workoutDescription,
+          status,
           totalWeightLifted,
           DateTime.now().millisecondsSinceEpoch,
           DateTime.now().millisecondsSinceEpoch
         ]);
   }
 
-  Future<int?> createExercise(
-      {required workoutId,
-      required order,
-      required excerciseName,
-      required excerciseDescription,
-      required bodyPart,
-      required weightUsed,
-      required reps,
-      required updatedAt,
-      required createdAt}) async {
+  void createExercise({required exerciseList}) async {
     final database = await DatabaseService().database;
-    return await database?.rawInsert(
-        """INSERT INTO $exerciseTable (workout_id,exercise_order, exercise_name, exercise_description, body_part, weight_used, repetition, updated_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        [
-          workoutId,
-          order,
-          excerciseName,
-          excerciseDescription,
-          bodyPart,
-          weightUsed,
-          reps,
-          DateTime.now().millisecondsSinceEpoch,
-          DateTime.now().millisecondsSinceEpoch
-        ]);
+    var batch = database?.batch();
+
+    for (var item in exerciseList) {
+      batch?.insert(exerciseTable, {
+        'workout_id': item.workoutId,
+        'exercise_order': item.exerciseOrder,
+        'exercise_name': item.exerciseName,
+        'exercise_description': item.exerciseDescription,
+        'status': item.status,
+        'body_part': item.bodyPart,
+        'set_number': item.setNumber,
+        'weight_used': item.weight,
+        'repetition': item.reps,
+        'updated_at': item.updatedAt.millisecondsSinceEpoch,
+        'created_at': item.createdAt.millisecondsSinceEpoch
+      });
+    }
+
+    batch?.commit(noResult: true);
   }
 
   Future<List?> fetchAllWorkout() async {
@@ -80,18 +82,30 @@ class WorkoutTrackerDB {
     return workoutListDB;
   }
 
-  Future<List?> fetchAllExerciseForworkout(int workoutId) async {
+  Future<List?> fetchAllExerciseForWorkout(int workoutId) async {
     final database = await DatabaseService().database;
-    final exerciseListDB = await database?.rawQuery("""SELECT * from $exerciseTable where workout_id = $workoutId""");
-    // final exerciseListDB = await database?.rawQuery("""SELECT * from $exerciseTable""");
+    final exerciseListDB = await database?.rawQuery("""
+        SELECT T.* FROM(
+          SELECT *, ROW_NUMBER() OVER(PARTITION BY exercise_name,set_number ORDER BY updated_at DESC) AS ROWNumber
+          FROM $exerciseTable
+          WHERE workout_id = $workoutId and status in ('created', 'updated')) T WHERE ROWNumber = 1""");
     return exerciseListDB;
   }
 
   Future<int?> deleteWorkout(int workoutId) async {
     final database = await DatabaseService().database;
-    final deleteWorkoutFromDB = await database?.rawDelete(
-        """DELETE FROM $workoutTable WHERE workout_id = $workoutId""");
-    return deleteWorkoutFromDB;
+    await database?.rawUpdate(
+        """UPDATE $exerciseTable SET status = "removed" WHERE workout_id = $workoutId""");
+    var delWorkoutRow = await database?.rawUpdate(
+        """UPDATE $workoutTable SET status = "removed" WHERE workout_id = $workoutId""");
+    return delWorkoutRow;
+  }
+
+  Future<int?> deleteExercise(int exerciseId) async {
+    final database = await DatabaseService().database;
+    final deleteExerciseFromDB = await database?.rawUpdate(
+        """UPDATE $exerciseTable SET status = "removed" WHERE exercise_id = $exerciseId""");
+    return deleteExerciseFromDB;
   }
 
   void dropTable() async {

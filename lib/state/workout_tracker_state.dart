@@ -1,3 +1,4 @@
+import "package:collection/collection.dart";
 import 'package:flutter/material.dart';
 import 'package:workout_tracker/database/workout_tracker_db.dart';
 import 'package:workout_tracker/model/exercise.dart';
@@ -5,6 +6,16 @@ import 'package:workout_tracker/model/exercise.dart';
 import '../model/workout.dart';
 
 class WorkoutTrackerState with ChangeNotifier {
+  // Body Part List
+  List<String> bodyPartList = [
+    'CHEST',
+    'BACK',
+    'ARM',
+    'ABDOMINAL',
+    'LEG',
+    'SHOULDER'
+  ];
+
   // List of Workout
   List<Workout> workoutList = [];
 
@@ -13,6 +24,9 @@ class WorkoutTrackerState with ChangeNotifier {
 
   // List current Exercises
   List<Exercise> currentExercises = [];
+
+  // Group Exercises by Name
+  Map<String, List<Exercise>> groupedExercise = {};
 
   var db = WorkoutTrackerDB();
 
@@ -23,13 +37,12 @@ class WorkoutTrackerState with ChangeNotifier {
     notifyListeners();
   }
 
-  void addNewExercise(int index, Exercise exercise) {
+  void addNewExercises(int index, List<Exercise> exerciseList) {
     workoutList
         .firstWhere((x) => x.workoutId == index)
         .exerciseList
-        ?.add(exercise);
-    var y = insertExerciseIntoTable(index, exercise);
-    print(y);
+        ?.addAll(exerciseList);
+    insertExerciseIntoTable(index, exerciseList);
     notifyListeners();
   }
 
@@ -38,23 +51,15 @@ class WorkoutTrackerState with ChangeNotifier {
         workoutName: workout.workoutName,
         createdAt: workout.lastWorkoutDate,
         workoutDescription: workout.workoutDescription,
+        status: workout.status,
         totalWeightLifted: workout.totalWeightLifted,
         updatedAt: workout.lastWorkoutDate);
     return x;
   }
 
-  Future<int?> insertExerciseIntoTable(int workoutId, Exercise exercise) async {
-    var x = await db.createExercise(
-        workoutId: workoutId,
-        order: exercise.exerciseOrder,
-        excerciseName: exercise.exerciseName,
-        excerciseDescription: exercise.exerciseDescription,
-        bodyPart: exercise.bodyPart,
-        weightUsed: exercise.weightUsed,
-        reps: exercise.reps,
-        updatedAt: exercise.updatedAt,
-        createdAt: exercise.createdAt);
-    return x;
+  void insertExerciseIntoTable(
+      int workoutId, List<Exercise> exerciseList) async {
+    db.createExercise(exerciseList: exerciseList);
   }
 
   void fetchAllWorkout() async {
@@ -65,6 +70,7 @@ class WorkoutTrackerState with ChangeNotifier {
           workoutId: item['workout_id'],
           workoutName: item['workout_name'],
           workoutDescription: item['workout_description'],
+          status: item['status'],
           lastWorkoutDate:
               DateTime.fromMillisecondsSinceEpoch(item['updated_at']),
           totalWeightLifted: item['total_weight_lifted'],
@@ -74,25 +80,42 @@ class WorkoutTrackerState with ChangeNotifier {
   }
 
   void fetchAllExerciseForWorkout(int workoutId) async {
-    var exerciseListFromTbl = await db.fetchAllExerciseForworkout(workoutId);
+    var exerciseListFromTbl = await db.fetchAllExerciseForWorkout(workoutId);
     var getWorkout = workoutList.firstWhere((x) => x.workoutId == workoutId);
     getWorkout.exerciseList?.clear();
     for (var item in exerciseListFromTbl!) {
       getWorkout.exerciseList?.add(
         Exercise(
             exerciseId: item['exercise_id'],
+            workoutId: workoutId,
             exerciseOrder: item['exercise_order'],
             exerciseName: item['exercise_name'],
             exerciseDescription: item['exercise_description'],
+            status: item['status'],
             bodyPart: item['body_part'],
-            weightUsed: item['weight_used'],
             reps: item['repetition'],
             updatedAt: DateTime.fromMillisecondsSinceEpoch(item['updated_at']),
-            createdAt: DateTime.fromMillisecondsSinceEpoch(item['created_at'])),
+            createdAt: DateTime.fromMillisecondsSinceEpoch(item['created_at']),
+            setNumber: item['set_number'],
+            weight: item['weight_used']),
       );
     }
     currentExercises = getWorkout.exerciseList!;
+    groupedExercise = groupBy(currentExercises, (obj) => obj.exerciseName);
     notifyListeners();
+  }
+
+  Future<int?> deleteExercise(Exercise exercise) async {
+    var delExerciseRow = await db.deleteExercise(exercise.exerciseId);
+    fetchAllExerciseForWorkout(exercise.workoutId);
+    return delExerciseRow;
+  }
+
+  Future<int?> deleteWorkout(int workoutId) async {
+    var delWorkoutRow = await db.deleteWorkout(workoutId);
+    print(delWorkoutRow);
+    fetchAllWorkout();
+    return delWorkoutRow;
   }
 
   void dropTable() async {

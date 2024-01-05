@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../model/exercise.dart';
-import 'create_workout_header.dart';
+import '../state/workout_tracker_state.dart';
 
 class ExerciseDetailTile extends StatefulWidget {
-  final List<Exercise> exerciseList;
+  final Map<String, List<Exercise>> groupedExercise;
   const ExerciseDetailTile({
     super.key,
-    required this.exerciseList,
+    required this.groupedExercise,
   });
 
   @override
@@ -15,27 +16,258 @@ class ExerciseDetailTile extends StatefulWidget {
 }
 
 class _ExerciseDetailTileState extends State<ExerciseDetailTile> {
-  double _weight = 2.5;
-  double _reps = 1;
+  late var pState = Provider.of<WorkoutTrackerState>(context, listen: false);
 
-  void updateWeight(updateType) {
-    setState(() {
-      if (updateType == 'increase') {
-        _weight += 2.5;
-      } else if (_weight > 2.5) {
-        _weight -= 2.5;
-      }
-    });
+  void deleteExercise(Exercise exercise) {
+    pState.deleteExercise(exercise);
   }
 
-  void updateReps(updateType) {
-    setState(() {
-      if (updateType == 'increase') {
-        _reps += 1;
-      } else if (_reps > 1) {
-        _reps -= 1;
+  void save(Exercise item, double weight, int reps) {
+    List<Exercise> newExercise = [
+      Exercise(
+          exerciseId: item.exerciseId,
+          workoutId: item.workoutId,
+          exerciseOrder: item.exerciseOrder,
+          exerciseName: item.exerciseName,
+          exerciseDescription: item.exerciseDescription,
+          status: "updated",
+          bodyPart: item.bodyPart,
+          setNumber: item.setNumber,
+          weight: weight,
+          reps: reps,
+          updatedAt: DateTime.now(),
+          createdAt: item.createdAt)
+    ];
+    pState.addNewExercises(item.workoutId, newExercise);
+    Navigator.pop(context);
+  }
+
+  void cancel() {
+    Navigator.pop(context);
+  }
+
+  // edit a exercise
+  void editExercise(Exercise item) {
+    double weight = item.weight;
+    int reps = item.reps;
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(builder: (context, setState) {
+        void updateWeight(String updateType) {
+          setState(() {
+            if (updateType == 'increase') {
+              weight += 2.5;
+            } else if (weight > 2.5) {
+              weight -= 2.5;
+            }
+          });
+        }
+
+        void updateReps(updateType) {
+          setState(() {
+            if (updateType == 'increase') {
+              reps += 1;
+            } else if (reps > 1) {
+              reps -= 1;
+            }
+          });
+        }
+
+        return AlertDialog(
+          title: Text(
+            item.exerciseName,
+            textAlign: TextAlign.center,
+          ),
+          content: Builder(builder: (context) {
+            return Column(mainAxisSize: MainAxisSize.min, children: [
+              Text(
+                "Set ${item.setNumber}",
+                textAlign: TextAlign.center,
+              ),
+              const Text("Weight"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.remove_circle_outlined,
+                      color: Colors.blue,
+                    ),
+                    onPressed: () => updateWeight("decrease"),
+                  ),
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      "$weight",
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.add_circle_outlined,
+                      color: Colors.blue,
+                    ),
+                    onPressed: () => updateWeight("increase"),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              const Divider(
+                height: 2,
+                color: Colors.blue,
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              const Text("Reps"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.remove_circle_outlined,
+                      color: Colors.blue,
+                    ),
+                    onPressed: () => updateReps("decrease"),
+                  ),
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      "${reps}",
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.add_circle_outlined,
+                      color: Colors.blue,
+                    ),
+                    onPressed: () => updateReps("increase"),
+                  ),
+                ],
+              )
+            ]);
+          }),
+          actions: [
+            // save button
+            MaterialButton(
+              onPressed: () => save(item, weight, reps),
+              child: const Text('Save'),
+            ),
+            // cancel button
+            MaterialButton(
+              onPressed: cancel,
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  List<Widget> createExerciseView() {
+    List<Widget> exerciseListView = [
+      Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 10,
+          ),
+          child: Row(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                child: Text(
+                  "Set",
+                  style: TextStyle(fontSize: 15),
+                ),
+              ),
+              const Spacer(),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                child: Text(
+                  "Weight",
+                  style: TextStyle(fontSize: 15),
+                ),
+              ),
+              const Spacer(),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                child: Text(
+                  "Rep",
+                  style: TextStyle(fontSize: 15),
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.save),
+                onPressed: () => {},
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+    widget.groupedExercise.forEach((exerciseName, exerciseList) {
+      exerciseListView.add(Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: 10.0,
+        ),
+        child: Row(
+          children: [
+            const Expanded(
+              child: Divider(),
+            ),
+            Text(
+              exerciseName,
+              style: const TextStyle(fontSize: 18),
+            ),
+            const Expanded(
+              child: Divider(),
+            ),
+          ],
+        ),
+      ));
+      for (var item in exerciseList) {
+        exerciseListView.add(
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 10,
+              ),
+              child: Row(
+                children: [
+                  Text("${item.setNumber}"),
+                  const Spacer(),
+                  Text("${item.weight}"),
+                  const Spacer(),
+                  Text("${item.reps}"),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => editExercise(item),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () => deleteExercise(item),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
       }
     });
+    return exerciseListView;
   }
 
   @override
@@ -46,53 +278,70 @@ class _ExerciseDetailTileState extends State<ExerciseDetailTile> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const CreateWorkoutHeader(),
-            ListView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: widget.exerciseList.length,
-              itemBuilder: (BuildContext context, int index) => Card(
-                child: ListTile(
-                  leading: Icon(Icons.fitness_center),
-                  title: Row(
-                    children: [
-                      SizedBox(
-                        child: Text(widget.exerciseList[index].exerciseName),
-                        width: 120,
-                      ),
-                      const Spacer(),
-                      SizedBox(
-                        child: Text(
-                          "${widget.exerciseList[index].weightUsed}",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        width: 40,
-                      ),
-                      const Spacer(),
-                      SizedBox(
-                        child: Text(
-                          "${widget.exerciseList[index].reps}",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        width: 40,
-                      ),
-                    ],
-                  ),
-                  subtitle: Text(widget.exerciseList[index].bodyPart),
-                  trailing: Icon(Icons.delete),
-                ),
-              ),
-            )
-          ],
+          children: createExerciseView(),
         ),
       ),
     );
   }
 }
+
+// Card(
+// margin: EdgeInsets.zero,
+// child: Padding(
+// padding: const EdgeInsets.symmetric(
+// horizontal: 20,
+// vertical: 10,
+// ),
+// child: Row(
+// children: [
+// Column(
+// children: [
+// const Padding(
+// padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+// child: Text(
+// "Set",
+// style: TextStyle(fontSize: 15),
+// ),
+// ),
+// Text("${item.setNumber}"),
+// ],
+// ),
+// const Spacer(),
+// Column(
+// children: [
+// const Padding(
+// padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+// child: Text(
+// "Weight",
+// style: TextStyle(fontSize: 15),
+// ),
+// ),
+// Text("${item.weight}"),
+// ],
+// ),
+// const Spacer(),
+// Column(
+// children: [
+// const Padding(
+// padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+// child: Text(
+// "Rep",
+// style: TextStyle(fontSize: 15),
+// ),
+// ),
+// Text("${item.reps}"),
+// ],
+// ),
+// const Spacer(),
+// IconButton(
+// icon: const Icon(Icons.edit),
+// onPressed: () => deleteExercise(item),
+// ),
+// IconButton(
+// icon: const Icon(Icons.delete),
+// onPressed: () => deleteExercise(item),
+// ),
+// ],
+// ),
+// ),
+// ),

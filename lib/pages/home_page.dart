@@ -81,6 +81,7 @@ class _HomePageState extends State<HomePage> {
       workoutId: 1,
       workoutName: newWorkoutNameController.text,
       workoutDescription: newWorkoutDescriptionController.text,
+      status: "created",
       lastWorkoutDate: DateTime.now(),
       totalWeightLifted: 0,
       exerciseList: [],
@@ -114,20 +115,13 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Consumer<WorkoutTrackerState>(
       builder: (context, value, child) => Scaffold(
-        drawer: const Drawer(),
         appBar: AppBar(
-            centerTitle: true,
-            title: const Text(
-              "Workout Tracker Home",
-              textAlign: TextAlign.center,
-            ),
-            actions: [
-              IconButton(
-                  onPressed: signOut,
-                  icon: const Icon(
-                    Icons.logout,
-                  )),
-            ]),
+          centerTitle: true,
+          title: const Text(
+            "Workout Tracker Home",
+            textAlign: TextAlign.center,
+          ),
+        ),
         body: WorkoutTile(
           workoutList: value.workoutList,
         ),
