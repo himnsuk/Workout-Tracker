@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../model/workout.dart';
@@ -22,8 +23,7 @@ class _WorkoutTileState extends State<WorkoutTile> {
   late var pState = Provider.of<WorkoutTrackerState>(context, listen: false);
 
   Text dateTimeFunc(DateTime date) {
-    var dtString = "${date.day}/${date.month}/${date.year}";
-    return Text(dtString);
+    return Text(DateFormat('EEEE, dd-MM-yyyy hh:mm:ss').format(date));
   }
 
   void deleteWorkout(int workoutId) {
@@ -73,7 +73,7 @@ class _WorkoutTileState extends State<WorkoutTile> {
               itemCount: widget.workoutList.length,
               itemBuilder: (BuildContext context, int index) => Card(
                 child: ListTile(
-                  onTap: () => context.pushNamed(
+                  onTap: () => context.goNamed(
                     'exercise',
                     pathParameters: {
                       'workout_id': "${widget.workoutList[index].workoutId}"
@@ -100,7 +100,7 @@ class _WorkoutTileState extends State<WorkoutTile> {
                   subtitle:
                       dateTimeFunc(widget.workoutList[index].lastWorkoutDate),
                   trailing: IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     onPressed: () =>
                         deletePrompt(widget.workoutList[index].workoutId),
                   ),

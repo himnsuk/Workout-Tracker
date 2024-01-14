@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../model/exercise.dart';
+import '../model/workout.dart';
 import '../state/workout_tracker_state.dart';
 
 class ExerciseDetailTile extends StatefulWidget {
   final Map<String, List<Exercise>> groupedExercise;
+  final Workout workout;
+  final Function updateState;
   const ExerciseDetailTile({
     super.key,
     required this.groupedExercise,
+    required this.workout,
+    required this.updateState,
   });
 
   @override
@@ -23,6 +28,8 @@ class _ExerciseDetailTileState extends State<ExerciseDetailTile> {
   }
 
   void save(Exercise item, double weight, int reps) {
+    double totalWeightLifted = widget.workout.totalWeightLifted;
+    totalWeightLifted += (weight - item.weight);
     List<Exercise> newExercise = [
       Exercise(
           exerciseId: item.exerciseId,
@@ -38,7 +45,8 @@ class _ExerciseDetailTileState extends State<ExerciseDetailTile> {
           updatedAt: DateTime.now(),
           createdAt: item.createdAt)
     ];
-    pState.addNewExercises(item.workoutId, newExercise);
+    pState.addNewExercises(item.workoutId, newExercise, totalWeightLifted);
+    widget.updateState();
     Navigator.pop(context);
   }
 
@@ -217,22 +225,38 @@ class _ExerciseDetailTileState extends State<ExerciseDetailTile> {
     ];
     widget.groupedExercise.forEach((exerciseName, exerciseList) {
       exerciseListView.add(Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 10.0,
-        ),
-        child: Row(
-          children: [
-            const Expanded(
-              child: Divider(),
+        padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+        child: Card(
+          color: Colors.blueAccent,
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 5,
             ),
-            Text(
-              exerciseName,
-              style: const TextStyle(fontSize: 18),
+            child: Row(
+              children: [
+                Text(
+                  exerciseName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => {},
+                  color: Colors.white,
+                  icon: const Icon(Icons.edit),
+                ),
+                IconButton(
+                  onPressed: () => {},
+                  color: Colors.white,
+                  icon: const Icon(Icons.delete),
+                ),
+              ],
             ),
-            const Expanded(
-              child: Divider(),
-            ),
-          ],
+          ),
         ),
       ));
       for (var item in exerciseList) {
@@ -284,64 +308,3 @@ class _ExerciseDetailTileState extends State<ExerciseDetailTile> {
     );
   }
 }
-
-// Card(
-// margin: EdgeInsets.zero,
-// child: Padding(
-// padding: const EdgeInsets.symmetric(
-// horizontal: 20,
-// vertical: 10,
-// ),
-// child: Row(
-// children: [
-// Column(
-// children: [
-// const Padding(
-// padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-// child: Text(
-// "Set",
-// style: TextStyle(fontSize: 15),
-// ),
-// ),
-// Text("${item.setNumber}"),
-// ],
-// ),
-// const Spacer(),
-// Column(
-// children: [
-// const Padding(
-// padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-// child: Text(
-// "Weight",
-// style: TextStyle(fontSize: 15),
-// ),
-// ),
-// Text("${item.weight}"),
-// ],
-// ),
-// const Spacer(),
-// Column(
-// children: [
-// const Padding(
-// padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-// child: Text(
-// "Rep",
-// style: TextStyle(fontSize: 15),
-// ),
-// ),
-// Text("${item.reps}"),
-// ],
-// ),
-// const Spacer(),
-// IconButton(
-// icon: const Icon(Icons.edit),
-// onPressed: () => deleteExercise(item),
-// ),
-// IconButton(
-// icon: const Icon(Icons.delete),
-// onPressed: () => deleteExercise(item),
-// ),
-// ],
-// ),
-// ),
-// ),

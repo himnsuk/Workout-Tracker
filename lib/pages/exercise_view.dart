@@ -6,6 +6,7 @@ import 'package:workout_tracker/components/exercise_detail_tile.dart';
 import 'package:workout_tracker/model/exercise.dart';
 import 'package:workout_tracker/model/set_rep_weight_form_controller.dart';
 
+import '../model/workout.dart';
 import '../state/workout_tracker_state.dart';
 
 class ExerciseView extends StatefulWidget {
@@ -32,6 +33,8 @@ class _ExerciseViewState extends State<ExerciseView> {
   ];
   late int intWorkoutId = int.parse(widget.workoutId.toString());
   late var pState = Provider.of<WorkoutTrackerState>(context, listen: false);
+  late Workout workout = pState.workoutList
+      .firstWhere((element) => element.workoutId == intWorkoutId);
   late List<String> bodyPartList = pState.bodyPartList;
   final int _selectedIndex = 0;
 
@@ -39,6 +42,12 @@ class _ExerciseViewState extends State<ExerciseView> {
   void initState() {
     super.initState();
     pState.fetchAllExerciseForWorkout(intWorkoutId);
+  }
+
+  void changeState() {
+    setState(() {
+      pState.fetchAllExerciseForWorkout(intWorkoutId);
+    });
   }
 
   void signOut() {
@@ -81,8 +90,9 @@ class _ExerciseViewState extends State<ExerciseView> {
         updatedAt: item.createdAt,
       ));
     }
-    pState.addNewExercises(intWorkoutId, exerciseList);
-    GoRouter.of(context).pop();
+
+    pState.completeExercise(workout, exerciseList);
+    GoRouter.of(context).goNamed('home');
   }
 
   // cancel
@@ -97,7 +107,7 @@ class _ExerciseViewState extends State<ExerciseView> {
 
   void _onItemTapped(int index) {
     if (index == 0 || index == 1) {
-      GoRouter.of(context).pop();
+      GoRouter.of(context).goNamed('home');
     }
   }
 
@@ -106,6 +116,7 @@ class _ExerciseViewState extends State<ExerciseView> {
     return Consumer<WorkoutTrackerState>(
       builder: (context, value, child) => Scaffold(
         appBar: AppBar(
+            automaticallyImplyLeading: false,
             centerTitle: true,
             title: const Text(
               "Workout Tracker",
@@ -121,6 +132,8 @@ class _ExerciseViewState extends State<ExerciseView> {
             ]),
         body: ExerciseDetailTile(
           groupedExercise: value.groupedExercise,
+          workout: workout,
+          updateState: changeState,
         ),
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[

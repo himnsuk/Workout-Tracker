@@ -72,7 +72,8 @@ class _CreateExercisePopupState extends State<CreateExercisePopup> {
             decoration:
                 const InputDecoration(hintText: "Excercise Description"),
           ),
-          ElevatedButton(onPressed: widget.addNewSet, child: Text("Add Set")),
+          ElevatedButton(
+              onPressed: widget.addNewSet, child: const Text("Add Set")),
           for (int i = 0; i < widget.setRepWeightFormController.length; i++)
             Column(
               children: [

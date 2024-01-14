@@ -28,6 +28,10 @@ class _HomePageState extends State<HomePage> {
     pState.fetchAllWorkout();
   }
 
+  void changeState() {
+    setState(() {});
+  }
+
   void initDB() async {
     var db = DatabaseService();
     await db.database;
@@ -109,6 +113,7 @@ class _HomePageState extends State<HomePage> {
   void removeTables() {
     var pState = Provider.of<WorkoutTrackerState>(context, listen: false);
     pState.dropTable();
+    changeState();
   }
 
   @override
@@ -116,11 +121,16 @@ class _HomePageState extends State<HomePage> {
     return Consumer<WorkoutTrackerState>(
       builder: (context, value, child) => Scaffold(
         appBar: AppBar(
-          centerTitle: true,
           title: const Text(
-            "Workout Tracker Home",
+            "Workout Tracker",
             textAlign: TextAlign.center,
           ),
+          actions: [
+            IconButton(
+              onPressed: () => {},
+              icon: const Icon(Icons.history),
+            ),
+          ],
         ),
         body: WorkoutTile(
           workoutList: value.workoutList,

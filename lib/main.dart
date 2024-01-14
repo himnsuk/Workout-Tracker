@@ -29,6 +29,7 @@ class WorkoutTracker extends StatelessWidget {
     routes: [
       GoRoute(
         path: '/',
+        name: 'home',
         builder: (context, state) => const HomePage(),
         // builder: (context, state) => const TestListView(),
         // builder: (context, state) => const AuthPage(),

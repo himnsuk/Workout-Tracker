@@ -37,13 +37,21 @@ class WorkoutTrackerState with ChangeNotifier {
     notifyListeners();
   }
 
-  void addNewExercises(int index, List<Exercise> exerciseList) {
+  void addNewExercises(
+      int index, List<Exercise> exerciseList, double totalWeightLifted) {
     workoutList
         .firstWhere((x) => x.workoutId == index)
         .exerciseList
         ?.addAll(exerciseList);
-    insertExerciseIntoTable(index, exerciseList);
+    db.createExercise(
+        workoutId: index,
+        totalWeightLifted: totalWeightLifted,
+        exerciseList: exerciseList);
     notifyListeners();
+  }
+
+  void completeExercise(Workout workout, List<Exercise> exerciseList) {
+    db.completeExercise(workout, exerciseList);
   }
 
   Future<int?> insertWorkoutIntoDatabase(Workout workout) async {
@@ -57,13 +65,16 @@ class WorkoutTrackerState with ChangeNotifier {
     return x;
   }
 
-  void insertExerciseIntoTable(
-      int workoutId, List<Exercise> exerciseList) async {
-    db.createExercise(exerciseList: exerciseList);
-  }
+  // void insertExerciseIntoTable(
+  //     int workoutId, List<Exercise> exerciseList) async {
+  //   db.createExercise(exerciseList: exerciseList);
+  // }
 
   void fetchAllWorkout() async {
-    var wkoutFromTbl = await db.fetchAllWorkout();
+    // var latestWorkout = await db.fetchAllWorkoutDetails();
+    // print(latestWorkout);
+    var wkoutFromTbl = await db.fetchLatestWorkout();
+    print(wkoutFromTbl);
     workoutList.clear();
     for (var item in wkoutFromTbl!) {
       workoutList.add(Workout(
@@ -101,6 +112,7 @@ class WorkoutTrackerState with ChangeNotifier {
       );
     }
     currentExercises = getWorkout.exerciseList!;
+    // var allExercise = await db.fetchAllExercise(workoutId);
     groupedExercise = groupBy(currentExercises, (obj) => obj.exerciseName);
     notifyListeners();
   }
@@ -113,12 +125,13 @@ class WorkoutTrackerState with ChangeNotifier {
 
   Future<int?> deleteWorkout(int workoutId) async {
     var delWorkoutRow = await db.deleteWorkout(workoutId);
-    print(delWorkoutRow);
     fetchAllWorkout();
+    // notifyListeners();
     return delWorkoutRow;
   }
 
   void dropTable() async {
     db.dropTable();
+    notifyListeners();
   }
 }
